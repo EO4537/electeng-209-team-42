@@ -12,9 +12,9 @@
     <OutputFileName>$(MSBuildProjectName)</OutputFileName>
     <OutputFileExtension>.elf</OutputFileExtension>
     <OutputDirectory>$(MSBuildProjectDirectory)\$(Configuration)</OutputDirectory>
-    <AssemblyName>ProgressReview</AssemblyName>
+    <AssemblyName>UART Implementation</AssemblyName>
     <Name>UART Implementation</Name>
-    <RootNamespace>ProgressReview</RootNamespace>
+    <RootNamespace>UART Implementation</RootNamespace>
     <ToolchainFlavour>Native</ToolchainFlavour>
     <KeepTimersRunning>true</KeepTimersRunning>
     <OverrideVtor>false</OverrideVtor>
@@ -109,6 +109,12 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="main.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="UART0.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="UART0.h">
       <SubType>compile</SubType>
     </Compile>
   </ItemGroup>
