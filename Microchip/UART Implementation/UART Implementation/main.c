@@ -20,8 +20,8 @@
  #define UBRR_VALUE (F_CPU / (16 * BAUD_RATE) -1)
 
 // Values 
-#define RMSVoltage 20.5
-#define PeakCurrent 321
+#define RMSVoltage 14.5
+#define PeakCurrent 125
 #define Power 1.60
 
  int main (void)
@@ -63,14 +63,31 @@
 		 uart_transmit(10);  // Creating new line 
 		 
 		 // Power 
+		 uint16_t power = (uint16_t) (Power * 100 + 0.5); //Scale by 100 to remove decimal point
+		 uint8_t powerUnits = (power / 100) + 48; // Units digit 
+		 uint8_t powerTens = ((power / 10) % 10 ) + 48; // First decimal digit
+		 uint8_t powerOnes = (power % 10) + 48;   // Second Decimal digit
 		 
+		 sprintf(string_buffer , "Power is: ");
+		 for (int i =0 ; i <strlen(string_buffer); i++)
+		 {
+			 uart_transmit(string_buffer[i]); // Transmit  the formatted RMS voltage string
+		 }
 		 
+		 uart_transmit(powerUnits);
+		 uart_transmit(46); // Transmit decimal point (.)
+		 uart_transmit(powerTens);
+		 uart_transmit(powerOnes);
+		 uart_transmit(13);             // Transmit new line
+		 uart_transmit(10);
+		  
+		  
 		 
 		 
 		 
 		  
 		 _delay_ms(1000); // 1 second delay 
-		 uart_transmit(13);    // Creating a different section
+		 uart_transmit(13);    // Creating a different section 
 		 uart_transmit(10);
 		 
 		 
