@@ -7,17 +7,16 @@
 
 #include <avr/io.h>
 #include <stdbool.h>
-#include  <string.h>
+#include <string.h>
 #include <stdio.h>
 
- #define F_CPU 2000000UL
- #include <util/delay.h>
- #include "UART0.h"
- #include <util/delay.h>
+#define F_CPU 2000000UL
+#include <util/delay.h>
+#include "UART0.h"
 
- // Macros
- #define BAUD_RATE 9600UL
- #define UBRR_VALUE (F_CPU / (16 * BAUD_RATE) -1)
+// Macros
+#define BAUD_RATE 9600UL
+#define UBRR_VALUE (F_CPU / (16 * BAUD_RATE) -1)
 
 // Values 
 #define RMSVoltage 14.5
@@ -39,10 +38,7 @@
 		 uint8_t voltDecimal = (voltage % 10) + 48;
 		 
 		 sprintf(string_buffer , "RMS Voltage is: ");
-		 for (int i =0 ; i <strlen(string_buffer); i++)
-		 {
-			 uart_transmit(string_buffer[i]); // Transmit  the formatted RMS voltage string
-		 }
+		 uart_transmit_string(string_buffer);
 		 
 		 uart_transmit(voltageTens);  // Transmit Tens digit
 		 uart_transmit(voltageUnits);   // Transmit Units digit
@@ -54,10 +50,7 @@
 		 
 		 // Peak Current
 		 sprintf(string_buffer , "Peak Current is: %d" ,PeakCurrent);
-		 for (int i =0 ; i <strlen(string_buffer); i++)
-		 {
-			 uart_transmit(string_buffer[i]); // Transmit  the formatted string
-		 }
+		 uart_transmit_string(string_buffer);
 		 
 		 uart_transmit(13);  // Creating new line 
 		 uart_transmit(10);  // Creating new line 
@@ -69,10 +62,7 @@
 		 uint8_t powerOnes = (power % 10) + 48;   // Second Decimal digit
 		 
 		 sprintf(string_buffer , "Power is: ");
-		 for (int i =0 ; i <strlen(string_buffer); i++)
-		 {
-			 uart_transmit(string_buffer[i]); // Transmit  the formatted RMS voltage string
-		 }
+		 uart_transmit_string(string_buffer);
 		 
 		 uart_transmit(powerUnits);
 		 uart_transmit(46); // Transmit decimal point (.)
@@ -82,9 +72,6 @@
 		 uart_transmit(10);
 		  
 		  
-		 
-		 
-		 
 		  
 		 _delay_ms(1000); // 1 second delay 
 		 uart_transmit(13);    // Creating a different section 

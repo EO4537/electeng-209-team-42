@@ -5,9 +5,11 @@
 #define UART0_H
 
 #include <avr/io.h>
+#include <string.h>
 
 void uart_init(uint16_t ubrr); // Initialize UART0 with the given UBRR value  
 
 void uart_transmit(uint8_t data); // Transmit a single character over USART0
+void uart_transmit_string(char* string_buffer); // Transmitting a string 
 
 #endif

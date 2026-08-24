@@ -15,3 +15,10 @@ void uart_transmit(uint8_t data){
 	
 	UDR0 = data;  // Put the data to be sent into the UDR0 register
 }
+
+void uart_transmit_string(char* string_buffer){
+	 for (int i =0 ; i <strlen(string_buffer); i++)
+	 {
+		 uart_transmit(string_buffer[i]); // Transmit  the formatted RMS voltage string
+	 }
+}
