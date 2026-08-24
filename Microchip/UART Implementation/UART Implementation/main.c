@@ -44,16 +44,14 @@
 		 uart_transmit(voltageUnits);   // Transmit Units digit
 		 uart_transmit(46); // Transmit decimal point (.) 
 		 uart_transmit(voltDecimal);    // Transmits Decimal digit
-		 uart_transmit(13);             // Transmit new line 
-		 uart_transmit(10);
+		 uart_transmit_newline();  
 		 
 		 
 		 // Peak Current
 		 sprintf(string_buffer , "Peak Current is: %d" ,PeakCurrent);
 		 uart_transmit_string(string_buffer);
 		 
-		 uart_transmit(13);  // Creating new line 
-		 uart_transmit(10);  // Creating new line 
+		uart_transmit_newline(); 
 		 
 		 // Power 
 		 uint16_t power = (uint16_t) (Power * 100 + 0.5); //Scale by 100 to remove decimal point
@@ -68,14 +66,12 @@
 		 uart_transmit(46); // Transmit decimal point (.)
 		 uart_transmit(powerTens);
 		 uart_transmit(powerOnes);
-		 uart_transmit(13);             // Transmit new line
-		 uart_transmit(10);
+		 uart_transmit_newline(); 
 		  
 		  
 		  
 		 _delay_ms(1000); // 1 second delay 
-		 uart_transmit(13);    // Creating a different section 
-		 uart_transmit(10);
+		 uart_transmit_newline(); 
 		 
 		 
 	 }
