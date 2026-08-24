@@ -1,0 +1,21 @@
+LTspice 26.0.2 for Windows
+Circuit: C:\Users\ethan\Desktop\University\ELECTENG 209\electeng-209-team-42\LTSpice Simulations\Master Simulation.net
+Start Time: Tue Aug 25 11:49:10 2026
+solver = Normal
+Maximum thread count: 8
+tnom = 27
+temp = 27
+method = trap
+Early termination of direct N-R iteration.
+Direct Newton iteration failed to find operating point.
+Starting Gmin stepping
+Gmin stepping succeeded in finding the operating point.
+
+Total elapsed time: 11.439 seconds.
+
+Files loaded:
+C:\Users\ethan\Desktop\University\ELECTENG 209\electeng-209-team-42\LTSpice Simulations\Master Simulation.net
+C:\Users\ethan\AppData\Local\LTspice\lib\cmp\standard.dio
+C:\Users\ethan\Desktop\University\ELECTENG 209\electeng-209-team-42\LTSpice Simulations\LM324.lib
+C:\Users\ethan\AppData\Local\LTspice\lib\sub\LT1083.lib
+
