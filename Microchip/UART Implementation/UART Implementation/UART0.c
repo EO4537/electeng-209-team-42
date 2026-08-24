@@ -22,3 +22,8 @@ void uart_transmit_string(char* string_buffer){
 		 uart_transmit(string_buffer[i]); // Transmit  the formatted RMS voltage string
 	 }
 }
+
+void uart_transmit_newline(){
+	 uart_transmit(13);  // Creating new line
+	 uart_transmit(10);  // Creating new line
+}
