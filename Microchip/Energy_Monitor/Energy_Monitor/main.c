@@ -8,10 +8,11 @@
  Timer/Counter0 is configured and being used for the display
  Timer/Counter1 should be used for any mathematics
  */ 
+#define F_CPU 2000000UL
 
 #include <avr/io.h>
 #include "display.h"
-
+#include <util/delay.h>
 
 int main(void)
 {
@@ -19,6 +20,7 @@ int main(void)
 	init_display();
     while (1) 
     {
+		
     }
 }
 
