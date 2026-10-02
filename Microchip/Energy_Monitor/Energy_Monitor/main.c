@@ -18,6 +18,10 @@ int main(void)
 {
     /* Replace with your application code */
 	init_display();
+	_delay_ms(2000);
+	update_value(9999.4, VOLTAGE); // Largest number possible
+	update_value(0.001, CURRENT); // Smallest number possible
+	update_value(12.34, POWER);
     while (1) 
     {
 		

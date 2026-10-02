@@ -15,7 +15,7 @@
 
 void init_display(void);
 
-void update_value(uint16_t num, uint8_t type);
+void update_value(float num, uint8_t type);
 
 
 
