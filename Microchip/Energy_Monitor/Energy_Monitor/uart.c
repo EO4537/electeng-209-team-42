@@ -1,0 +1,35 @@
+/*
+ * uart.c
+ *
+ * Created: 6/10/2026 5:11:19 pm
+ *  Author: eome621
+ */ 
+#include "uart.h"
+#define F_CPU 2000000 UL
+#define UBRR 9600
+
+void uart_init(void) {
+	UBRR0 = (F_CPU/(UBRR*16)) - 1;
+	UCSR0B |= 1 << TXEN0;  // Set TXEN0 bit to 1 ( enable transmit )
+	UCSR0C |= ( 1 << UCSZ01) | (1 << UCSZ00) ;  // character size set to 8 bits
+
+}
+
+void uart_transmit(uint8_t data){
+	while ((UCSR0A & (1 << UDRE0)) == 0){  // UDRE0 bit is checked. If its 0 wait for it to become 1 before transmitting the data
+	}
+	
+	UDR0 = data;  // Put the data to be sent into the UDR0 register
+}
+
+void uart_transmit_string(char* string_buffer){
+	for (int i =0 ; i <strlen(string_buffer); i++)
+	{
+		uart_transmit(string_buffer[i]); // Transmit  the formatted RMS voltage string
+	}
+}
+
+void uart_transmit_newline(){
+	uart_transmit(13);  // Creating new line
+	uart_transmit(10);  // Creating new line
+}
