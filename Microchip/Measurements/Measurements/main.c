@@ -15,6 +15,7 @@
 
 float vrms;
 float ipeak_ma;
+float power;
 
 
 int main(void){
@@ -28,7 +29,9 @@ int main(void){
 		if (adc_data_ready()){
 			 vrms = calc_rms(v_buffer, MAX_SAMPLES, V_GAIN);               // voltage Rms in V
 			 ipeak_ma = calc_peak(i_buffer, MAX_SAMPLES ,  I_GAIN) * 1000;   // Peak current in mA
-			
+			 power = calc_power(v_buffer , i_buffer , MAX_SAMPLES);
+			 
+			 adc_reset();
 		}
 	}
 }

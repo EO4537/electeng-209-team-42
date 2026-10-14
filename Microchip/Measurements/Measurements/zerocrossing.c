@@ -11,8 +11,7 @@
 #include <avr/interrupt.h>
 
 volatile uint8_t zc_flag = 0;
-volatile uint8_t zc_count = 0;
-volatile uint8_t zc_stop = 0;
+
 
 void zc_init(){
 	DDRD &= ~(1 << PD2);   //  Set PD2 (INT0) as input
@@ -21,5 +20,7 @@ void zc_init(){
 }
 
 ISR(INT0_vect){
-	zc_flag =1;
+	if (adc_state == STATE_READY){
+		zc_flag =1;
+	}
 }
