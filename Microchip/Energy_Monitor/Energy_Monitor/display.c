@@ -6,6 +6,7 @@
  */ 
 #include <avr/io.h>
 #include <avr/interrupt.h>
+#include <stdbool.h>
 #include "display.h"
 
 // Defining pins
@@ -15,11 +16,11 @@
 
 // Internal functions not used by main.c
 static void transmitDigit(uint8_t num, uint8_t place);
-static void update_int_value(uint16_t num, uint8_t type, uint8_t decimalPlace);
 static void set_error(uint8_t type);
 
 // Current data to display, stored as each digits seven-segment representation
-uint8_t data[3][4] = {
+uint8_t data[4][4] = {
+	{0, 0, 0, 0},
 	{0, 0, 0, 0},
 	{0, 0, 0, 0},
 	{0, 0, 0, 0}
@@ -45,7 +46,13 @@ volatile uint8_t cycles = 0;
 volatile uint8_t type = 0;
 volatile uint8_t place = 0;
 
+bool active = true;
+
 ISR (TIMER0_COMPA_vect) {
+	if (active == false) {
+		return;
+	}
+	
 	// Display the required digit
 	transmitDigit(data[type][place], place);
 	
@@ -60,7 +67,7 @@ ISR (TIMER0_COMPA_vect) {
 		PORTB &= 0b11110000;
 		cycles = 0;
 		type++;
-		if (type == 3) {type = 0;};
+		if (type == 4) {type = 0;};
 		PORTB |= (1 << type);
 	}
 }
@@ -93,47 +100,19 @@ void init_display(void) {
 	set_error(VOLTAGE);
 	set_error(CURRENT);
 	set_error(POWER);
+	set_error(ENERGY);
 	
 	// Set display type LEDs
 	DDRB |= (0b00001111);
 }
 
-void update_value(float num, uint8_t type) {
-	// Check if number is out of bounds of what can be displayed
-	if (num >= 9999.5 || num < 0.001f) {
-		set_error(type);
-		return;
+void update_display_value(uint8_t *num, uint8_t decimal, uint8_t type) {
+	// Stores given data in arrays of the 7 segment rep
+	// 
+	for (uint8_t i = 0; i < 4; i++) {
+		data[type][i] = DIGITS[num[i]];
 	}
-	
-	// Shift number over until it fills display
-	// Track where decimal point should go
-	uint8_t deicimalPlace = 0;
-	
-	if (num >= 1) {
-		while (num < 999.95) {
-			num = num * 10;
-			deicimalPlace++;
-		}
-	} else {
-		num = num * 1000;
-		deicimalPlace = 3;
-	}
-	
-	num = num + 0.5;
-	update_int_value((uint16_t) num, type, deicimalPlace);
-}
-
-static void update_int_value(uint16_t num, uint8_t type, uint8_t decimalPlace) {
-	// Split 4 digit number into the separate digits
-	data[type][0] = DIGITS[num%10];
-	num = num/10;
-	data[type][1] = DIGITS[num%10];
-	num = num/10;
-	data[type][2] = DIGITS[num%10];
-	num = num/10;
-	data[type][3] = DIGITS[num%10];
-	
-	data[type][decimalPlace] |= 0b10000000;
+	data[type][decimal] |= 0b10000000;
 }
 
 static void set_error(uint8_t type) {
@@ -147,22 +126,40 @@ static void set_error(uint8_t type) {
 static void transmitDigit(uint8_t display, uint8_t place) {
 	// Reset pins
 	PORTD |= 0b11110000;
-	// Set new pin
+	// Set multiplexer to output correct digit
 	PORTD &= ~(1 << (7 - place));
 	
+	// Reset clock pin
 	PORTC &= ~SH_CP;
+	// Reset register output
 	PORTC &= ~SH_ST;
 	
 	for (int8_t i = 7; i >= 0; i--) {
+		// Set data pin to appropriate output for
+		// current bit
 		if (display & (1 << i)) {
 			PORTC |= SH_DS;
 		} else {
 			PORTC &= ~SH_DS;
 		}
 		
+		// Shift bit into register
 		PORTC |= SH_CP;
 		PORTC &= ~SH_CP;
 	}
+	
+	// Activate register output
 	PORTC |= SH_ST;
 	PORTC &= ~SH_ST;
+}
+
+void activate_7seg_display(void) {
+	active = true;
+	
+}
+void deactivate_7seg_display(void) {
+	active = false;
+	for (uint8_t i = 0; i < 4; i++) {
+		transmitDigit(0b00000000, i);
+	}
 }

@@ -11,18 +11,23 @@
 #define F_CPU 2000000UL
 
 #include <avr/io.h>
+#include "comms.h"
 #include "display.h"
 #include <util/delay.h>
 
 int main(void)
 {
     /* Replace with your application code */
-	init_display();
+	comms_init();
+	update_value(12.34, VOLTAGE);
+	update_value(123.4, CURRENT);
+	update_value(0.0321, POWER);
+	update_value(8888, ENERGY);
 	_delay_ms(2000);
-	update_value(9999.4, VOLTAGE); // Largest number possible
-	update_value(0.001, CURRENT); // Smallest number possible
-	update_value(12.34, POWER);
-    while (1) 
+	deactivate_display();
+	_delay_ms(2000);
+	activate_display();
+    while (1)
     {
 		
     }

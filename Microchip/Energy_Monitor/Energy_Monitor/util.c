@@ -10,7 +10,7 @@
 
 // Convert a float into an array (given by the user) of digits
 // Returns the decimal place (-1 if number fails)
-int8_t process_float(uint8_t *arr, uint8_t size, float num) {
+/*int8_t process_float(uint8_t *arr, uint8_t size, float num) {
 	if (num >= (10f^size)-0.5 || num < (10f^(-size))) {
 		return -1;
 	}
@@ -42,4 +42,4 @@ int8_t process_float(uint8_t *arr, uint8_t size, float num) {
 		arr[i] = num%10;
 		num = num/10
 	}
-}
+}*/
