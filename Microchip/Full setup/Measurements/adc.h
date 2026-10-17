@@ -14,7 +14,7 @@
 
 
 // Samples and window length
-#define WHOLE_CYCLES  10  // Number of cycles to sample 
+#define WHOLE_CYCLES  25  // Number of cycles to sample 
 #define MAX_SAMPLES ((SAMPLING_RATE * WHOLE_CYCLES) / (2 * SIGNAL_FREQ))
 
 

@@ -17,8 +17,8 @@
 // Component values and Gains
 #define RA 100000.00 
 #define RB 4700.00 
-#define RS 0.5 
-#define GIO 2.8
+#define RS 0.56 
+#define GIO 2.7
 #define GVO 1.0
 #define V_GAIN ((RB / (RA + RB)) * GVO)
 #define I_GAIN (RS * GIO)

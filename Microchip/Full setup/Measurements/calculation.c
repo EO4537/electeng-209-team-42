@@ -37,6 +37,8 @@ static float counts_to_value(uint16_t counts , float gain){
 float calc_power(volatile uint16_t *v_buffer, volatile uint16_t *i_buffer, uint8_t n){
 	float sum=0;
 	
+	//sum = sum + ((counts_to_value(v_buffer[9], V_GAIN) + counts_to_value(v_buffer[10], V_GAIN))/2 * counts_to_value(i_buffer[0], I_GAIN));
+	
 	for (uint8_t i =1; i < n-1; i++){  // Skip fist and last sample so every term can be calculated
 		float v_now  = counts_to_value(v_buffer[i], V_GAIN);
 		float v_next = counts_to_value(v_buffer[i + 1], V_GAIN);
@@ -49,8 +51,9 @@ float calc_power(volatile uint16_t *v_buffer, volatile uint16_t *i_buffer, uint8
 		sum = sum + (v_now * i_interpolated) + (v_interpolated * i_now);
 	}
 	
-	float power = sum/ (2.0 * (n-2));
+	float power = sum / (float)(2*(n-1));
+	
 	return power; 
-	// return power * POWER_CORRECTION;
+	//return power * POWER_CORRECTION;
 	
 }
