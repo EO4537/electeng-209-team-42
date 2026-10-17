@@ -21,8 +21,8 @@
 // ADC conversion constants
 #define VREF      5.0              
 #define ADC_STEPS 1024.0           
-#define VOFF      2.1
-#define SAMPLING_RATE 9500UL // ADC conversion rate
+#define VOFF      2.08
+#define SAMPLING_RATE 9876UL // ADC conversion rate
 
 
 
