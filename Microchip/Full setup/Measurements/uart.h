@@ -11,10 +11,10 @@
 
 #include "util.h"
 
-void init_uart(void);
+void uart_init(void);
 
-void update_uart_value(uint8_t *num, uint8_t decimal, uint8_t type);
+void uart_update_value(uint8_t *num, uint8_t decimal, uint8_t type);
 
-void transmit_data(void);
+void uart_transmit(void);
 
 #endif /* UART_H_ */

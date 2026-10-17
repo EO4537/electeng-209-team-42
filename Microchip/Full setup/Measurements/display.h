@@ -11,15 +11,16 @@
 
 #include "util.h"
 
-void init_display(void);
+void display_init(void);
 
-void update_display_value(uint8_t *num, uint8_t decimal, uint8_t type);
+void display_update_value(uint8_t *num, uint8_t decimal, uint8_t type);
 
-void activate_7seg_display(void);
+void display_blank(void);
 
-void deactivate_7seg_display(void);
+void display_error(uint8_t type);
 
-void cycle_digit(void);
-void cycle_value(void);
+void display_cycle_digit(void);
+
+void display_cycle_value(void);
 
 #endif /* DISPLAY_H_ */

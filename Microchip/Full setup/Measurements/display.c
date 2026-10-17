@@ -5,7 +5,6 @@
  *  Author: Ethan
  */ 
 #include <avr/io.h>
-#include <avr/interrupt.h>
 #include <stdbool.h>
 #include "display.h"
 #include "comms.h"
@@ -16,11 +15,10 @@
 #define SH_ST (1 << PORTC5)
 
 // Internal functions not used by main.c
-static void transmitDigit(uint8_t num, uint8_t place);
-static void set_error(uint8_t type);
+static void transmit_digit(uint8_t num, uint8_t place);
 
 // Current data to display, stored as each digits seven-segment representation
-uint8_t data[4][4] = {
+static uint8_t data[4][4] = {
 	{0, 0, 0, 0},
 	{0, 0, 0, 0},
 	{0, 0, 0, 0},
@@ -28,7 +26,7 @@ uint8_t data[4][4] = {
 };
 
 // Storage of seven-segment rep for certain digits
-const uint8_t DIGITS[10] = {
+static const uint8_t DIGITS[10] = {
 	0b00111111,
 	0b00000110,
 	0b01011011,
@@ -43,26 +41,20 @@ const uint8_t DIGITS[10] = {
 
 // Variables to track what digit from
 // what data should be displayed
-volatile uint8_t type = 0;
-volatile uint8_t place = 0;
+static volatile uint8_t type = 0;
+static volatile uint8_t place = 0;
 
-bool active = true;
-
-
-
-void cycle_digit(void) {
-	if (active == false){return;}
+void display_cycle_digit(void) {
 	
 	// Display the required digit
-	transmitDigit(data[type][place], place);
+	transmit_digit(data[type][place], place);
 	
 	// Show the next digit along next
 	place++;
 	if (place == 4) {place = 0;}
 }
 
-void cycle_value(void) {
-	if (active == false){return;}
+void display_cycle_value(void) {
 		
 	// Reset LEDs
 	PORTB &= 0b11110000;
@@ -72,7 +64,7 @@ void cycle_value(void) {
 	if (type == 4) {type = 0;};
 }
 
-void init_display(void) {
+void display_init(void) {
 	// Initialise display pins
 	DDRC |= (1 << DDC3);
 	DDRC |= (1 << DDC4);
@@ -83,39 +75,24 @@ void init_display(void) {
 	DDRD |= (1 << DDD6);
 	DDRD |= (1 << DDD7);
 	
-	// Timer setup to CTC mode
-	TCCR0A &= ~(1 << WGM00);
-	TCCR0A |= (1 << WGM01);
-	TCCR0B &= ~(1 << WGM02);
-	
-	// Set to reset every ~5ms (4.992) (scaled to /64)
-	TCCR0B |= (1 << CS00);
-	TCCR0B |= (1 << CS01);
-	TCCR0B &= ~(1 << CS02);
-	OCR0A |= 156;
-	
-	TIMSK0 |= (1 << OCIE0A);
-	sei();
-	
-	set_error(VOLTAGE);
-	set_error(CURRENT);
-	set_error(POWER);
-	set_error(ENERGY);
+	display_error(VOLTAGE);
+	display_error(CURRENT);
+	display_error(POWER);
+	display_error(ENERGY);
 	
 	// Set display type LEDs
 	DDRB |= (0b00001111);
 }
 
-void update_display_value(uint8_t *num, uint8_t decimal, uint8_t type) {
-	// Stores given data in arrays of the 7 segment rep
-	// 
+void display_update_value(uint8_t *num, uint8_t decimal, uint8_t type) {
+	// Stores given data as arrays in 7 segment rep
 	for (uint8_t i = 0; i < 4; i++) {
 		data[type][i] = DIGITS[num[i]];
 	}
 	data[type][decimal] |= 0b10000000;
 }
 
-static void set_error(uint8_t type) {
+void display_error(uint8_t type) {
 	// Set a number to display an error
 	data[type][0] = 0b01000000;
 	data[type][1] = 0b01000000;
@@ -123,7 +100,7 @@ static void set_error(uint8_t type) {
 	data[type][3] = 0b01000000;
 }
 
-static void transmitDigit(uint8_t display, uint8_t place) {
+static void transmit_digit(uint8_t display, uint8_t place) {
 	// Reset pins
 	PORTD |= 0b11110000;
 	// Set multiplexer to output correct digit
@@ -153,13 +130,10 @@ static void transmitDigit(uint8_t display, uint8_t place) {
 	PORTC &= ~SH_ST;
 }
 
-void activate_7seg_display(void) {
-	active = true;
-	
-}
-void deactivate_7seg_display(void) {
-	active = false;
+// Turn off the 7 segment display
+void display_blank(void) {
+	PORTB &= 0b11110000;
 	for (uint8_t i = 0; i < 4; i++) {
-		transmitDigit(0b00000000, i);
+		transmit_digit(0b00000000, i);
 	}
 }
