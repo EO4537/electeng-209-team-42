@@ -19,4 +19,7 @@ void activate_7seg_display(void);
 
 void deactivate_7seg_display(void);
 
+void cycle_digit(void);
+void cycle_value(void);
+
 #endif /* DISPLAY_H_ */

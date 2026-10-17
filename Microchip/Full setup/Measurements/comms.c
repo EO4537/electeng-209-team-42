@@ -8,8 +8,24 @@
 #include "comms.h"
 #include "uart.h"
 #include "display.h"
+#include <avr/interrupt.h>
 
 uint8_t tempNum[4] = {3, 4, 5, 9};
+	
+volatile uint8_t displayCycles = 0;
+
+ISR (TIMER0_COMPA_vect){
+	cycle_digit();
+	
+	// Move to different display if 1s passed
+	displayCycles++;
+	if (displayCycles == 200){
+		displayCycles = 0;
+		
+		cycle_value();
+		transmit_data();
+	}
+}
 
 void comms_init(void){
 	init_display();

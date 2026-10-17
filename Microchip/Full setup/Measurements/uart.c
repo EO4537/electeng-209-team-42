@@ -39,12 +39,6 @@ void init_uart(void){
 }
 
 void update_uart_value(uint8_t *num, uint8_t decimal, uint8_t type){
-	// Ensure the header is printed occasionally so it is always visible
-	// with data underneath it.
-	if (linesPrinted == 10){
-		transmit_header();
-		linesPrinted = 0;
-	}
 	// Store each digit of the number as it's ascii value
 	// Insert decimal point where specified
 	uint8_t digitPlace = 3;
@@ -56,10 +50,6 @@ void update_uart_value(uint8_t *num, uint8_t decimal, uint8_t type){
 		}
 		digitPlace--;
 	}
-	
-	// Update uart display data
-	transmit_data();
-	linesPrinted++;
 }
 
 void uart_transmit_char(uint8_t character){
@@ -82,8 +72,10 @@ void transmit_header(void){
 }
 
 void transmit_data(void){
-	uart_transmit_char(13);  // Creating new line
-	uart_transmit_char(10);
+	if (linesPrinted == 10) {
+		transmit_header();
+		linesPrinted = 0;
+	}
 	
 	// Loop through each data type
 	for (int i = 0; i < 4; i++){
@@ -97,4 +89,9 @@ void transmit_data(void){
 			uart_transmit_char(32);	
 		}
 	}
+	
+	uart_transmit_char(13);  // Creating new line
+	uart_transmit_char(10);
+	
+	linesPrinted++;
 }

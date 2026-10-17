@@ -15,5 +15,6 @@ void init_uart(void);
 
 void update_uart_value(uint8_t *num, uint8_t decimal, uint8_t type);
 
+void transmit_data(void);
 
 #endif /* UART_H_ */

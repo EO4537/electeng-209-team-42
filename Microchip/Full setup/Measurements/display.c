@@ -43,16 +43,15 @@ const uint8_t DIGITS[10] = {
 
 // Variables to track what digit from
 // what data should be displayed
-volatile uint8_t cycles = 0;
 volatile uint8_t type = 0;
 volatile uint8_t place = 0;
 
 bool active = true;
 
-ISR (TIMER0_COMPA_vect){
-	if (active == false){
-		return;
-	}
+
+
+void cycle_digit(void) {
+	if (active == false){return;}
 	
 	// Display the required digit
 	transmitDigit(data[type][place], place);
@@ -60,17 +59,17 @@ ISR (TIMER0_COMPA_vect){
 	// Show the next digit along next
 	place++;
 	if (place == 4) {place = 0;}
+}
+
+void cycle_value(void) {
+	if (active == false){return;}
+		
+	// Reset LEDs
+	PORTB &= 0b11110000;
+	PORTB |= (1 << type);
 	
-	// Move to different display if 1s passed
-	cycles++;
-	if (cycles == 200){
-		// Reset LEDs
-		PORTB &= 0b11110000;
-		cycles = 0;
-		type++;
-		if (type == 4) {type = 0;};
-		PORTB |= (1 << type);
-	}
+	type++;
+	if (type == 4) {type = 0;};
 }
 
 void init_display(void) {
