@@ -30,15 +30,15 @@
     <EraseKey />
     <AsfFrameworkConfig>
       <framework-data xmlns="">
-  <options />
-  <configurations />
-  <files />
-  <documentation help="" />
-  <offline-documentation help="" />
-  <dependencies>
-    <content-extension eid="atmel.asf" uuidref="Atmel.ASF" version="3.52.0" />
-  </dependencies>
-</framework-data>
+        <options />
+        <configurations />
+        <files />
+        <documentation help="" />
+        <offline-documentation help="" />
+        <dependencies>
+          <content-extension eid="atmel.asf" uuidref="Atmel.ASF" version="3.52.0" />
+        </dependencies>
+      </framework-data>
     </AsfFrameworkConfig>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
@@ -150,6 +150,9 @@
     <Compile Include="main.c">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="parameters.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="timer1.c">
       <SubType>compile</SubType>
     </Compile>
@@ -160,12 +163,6 @@
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="uart.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="util.c">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="util.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="zerocrossing.c">

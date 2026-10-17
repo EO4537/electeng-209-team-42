@@ -3,11 +3,13 @@
  *
  * Created: 1/10/2026 4:22:26 PM
  *  Author: Ethan
- */ 
+ */
+#include "display.h"
+
 #include <avr/io.h>
 #include <stdbool.h>
-#include "display.h"
-#include "comms.h"
+
+#include "parameters.h"
 
 // Defining pins
 #define SH_CP (1 << PORTC3)

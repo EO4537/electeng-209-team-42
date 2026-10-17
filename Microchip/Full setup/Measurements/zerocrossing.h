@@ -11,13 +11,8 @@
 
 #include <stdint.h>
 
-
 extern volatile uint8_t zc_flag;  // flag for detecting start of zero crossing
 
-
 void zc_init();
-
-
-
 
 #endif /* ZEROCROSSING_H_ */

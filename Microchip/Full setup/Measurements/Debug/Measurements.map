@@ -93,16 +93,6 @@ Discarded input sections
  .text          0x00000000        0x0 uart.o
  .data          0x00000000        0x0 uart.o
  .bss           0x00000000        0x0 uart.o
- .text          0x00000000        0x0 util.o
- .data          0x00000000        0x0 util.o
- .bss           0x00000000        0x0 util.o
- .debug_info    0x00000000       0x56 util.o
- .debug_abbrev  0x00000000       0x26 util.o
- .debug_aranges
-                0x00000000       0x18 util.o
- .debug_line    0x00000000       0x1a util.o
- .debug_str     0x00000000      0x183 util.o
- .comment       0x00000000       0x31 util.o
  .text          0x00000000        0x0 zerocrossing.o
  .data          0x00000000        0x0 zerocrossing.o
  .bss           0x00000000        0x0 zerocrossing.o
@@ -255,7 +245,6 @@ LOAD display.o
 LOAD main.o
 LOAD timer1.o
 LOAD uart.o
-LOAD util.o
 LOAD zerocrossing.o
 START GROUP
 LOAD c:/program files (x86)/atmel/studio/7.0/toolchain/avr8/avr8-gnu-toolchain/bin/../lib/gcc/avr/5.4.0/../../../../avr/lib/avr5\libm.a
@@ -844,25 +833,25 @@ END GROUP
  .debug_frame   0x0000033c       0x84 uart.o
  .debug_frame   0x000003c0       0x44 zerocrossing.o
 
-.debug_str      0x00000000      0x829
+.debug_str      0x00000000      0x7c4
  *(.debug_str)
  .debug_str     0x00000000      0x318 C:/Program Files (x86)/Atmel/Studio/7.0/Packs/atmel/ATmega_DFP/1.7.374/gcc/dev/atmega328pb/avr5/crtatmega328pb.o
- .debug_str     0x00000318      0x1de adc.o
-                                0x21a (size before relaxing)
- .debug_str     0x000004f6       0x9a calculation.o
-                                0x247 (size before relaxing)
- .debug_str     0x00000590      0x195 comms.o
+ .debug_str     0x00000318      0x1f5 adc.o
+                                0x231 (size before relaxing)
+ .debug_str     0x0000050d       0x9a calculation.o
+                                0x25e (size before relaxing)
+ .debug_str     0x000005a7      0x119 comms.o
                                 0x2cc (size before relaxing)
- .debug_str     0x00000725       0x40 display.o
+ .debug_str     0x000006c0       0x40 display.o
                                 0x251 (size before relaxing)
- .debug_str     0x00000765       0x33 main.o
+ .debug_str     0x00000700       0x33 main.o
                                 0x24f (size before relaxing)
- .debug_str     0x00000798        0xe timer1.o
-                                0x1a2 (size before relaxing)
- .debug_str     0x000007a6       0x64 uart.o
+ .debug_str     0x00000733        0xe timer1.o
+                                0x1b9 (size before relaxing)
+ .debug_str     0x00000741       0x64 uart.o
                                 0x256 (size before relaxing)
- .debug_str     0x0000080a       0x1f zerocrossing.o
-                                0x1b8 (size before relaxing)
+ .debug_str     0x000007a5       0x1f zerocrossing.o
+                                0x1cf (size before relaxing)
 
 .debug_loc      0x00000000      0xcd6
  *(.debug_loc)

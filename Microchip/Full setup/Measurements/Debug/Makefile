@@ -44,7 +44,6 @@ C_SRCS +=  \
 ../main.c \
 ../timer1.c \
 ../uart.c \
-../util.c \
 ../zerocrossing.c
 
 
@@ -62,7 +61,6 @@ display.o \
 main.o \
 timer1.o \
 uart.o \
-util.o \
 zerocrossing.o
 
 OBJS_AS_ARGS +=  \
@@ -73,7 +71,6 @@ display.o \
 main.o \
 timer1.o \
 uart.o \
-util.o \
 zerocrossing.o
 
 C_DEPS +=  \
@@ -84,7 +81,6 @@ display.d \
 main.d \
 timer1.d \
 uart.d \
-util.d \
 zerocrossing.d
 
 C_DEPS_AS_ARGS +=  \
@@ -95,7 +91,6 @@ display.d \
 main.d \
 timer1.d \
 uart.d \
-util.d \
 zerocrossing.d
 
 OUTPUT_FILE_PATH +=Measurements.elf
@@ -155,13 +150,6 @@ LINKER_SCRIPT_DEP+=
 	
 
 ./uart.o: .././uart.c
-	@echo Building file: $<
-	@echo Invoking: AVR/GNU C Compiler : 5.4.0
-	$(QUOTE)C:\Program Files (x86)\Atmel\Studio\7.0\toolchain\avr8\avr8-gnu-toolchain\bin\avr-gcc.exe$(QUOTE)  -x c -funsigned-char -funsigned-bitfields -DDEBUG  -I"C:\Program Files (x86)\Atmel\Studio\7.0\Packs\atmel\ATmega_DFP\1.7.374\include"  -Og -ffunction-sections -fdata-sections -fpack-struct -fshort-enums -g2 -Wall -mmcu=atmega328pb -B "C:\Program Files (x86)\Atmel\Studio\7.0\Packs\atmel\ATmega_DFP\1.7.374\gcc\dev\atmega328pb" -c -std=gnu99 -MD -MP -MF "$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -MT"$(@:%.o=%.o)"   -o "$@" "$<" 
-	@echo Finished building: $<
-	
-
-./util.o: .././util.c
 	@echo Building file: $<
 	@echo Invoking: AVR/GNU C Compiler : 5.4.0
 	$(QUOTE)C:\Program Files (x86)\Atmel\Studio\7.0\toolchain\avr8\avr8-gnu-toolchain\bin\avr-gcc.exe$(QUOTE)  -x c -funsigned-char -funsigned-bitfields -DDEBUG  -I"C:\Program Files (x86)\Atmel\Studio\7.0\Packs\atmel\ATmega_DFP\1.7.374\include"  -Og -ffunction-sections -fdata-sections -fpack-struct -fshort-enums -g2 -Wall -mmcu=atmega328pb -B "C:\Program Files (x86)\Atmel\Studio\7.0\Packs\atmel\ATmega_DFP\1.7.374\gcc\dev\atmega328pb" -c -std=gnu99 -MD -MP -MF "$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -MT"$(@:%.o=%.o)"   -o "$@" "$<" 

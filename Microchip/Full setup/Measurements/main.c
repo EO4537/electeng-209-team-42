@@ -14,6 +14,7 @@
 #include "calculation.h"
 // added Ethan's function files
 #include "comms.h"
+#include "parameters.h"
 
 float vrms;
 float ipeak_ma;
@@ -39,7 +40,6 @@ int main(void){
 			 comms_update_value(power, POWER);
 			 adc_reset();
 		}
-		
 	}
 }
 

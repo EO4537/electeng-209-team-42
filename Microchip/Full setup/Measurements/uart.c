@@ -7,6 +7,7 @@
 #include "uart.h"
 #include <string.h>
 #include <stdint.h>
+#include <avr/io.h>
 
 #define F_CPU 2000000UL
 #define UBRR 9600

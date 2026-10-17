@@ -6,8 +6,8 @@
  *  Author: Aditya
  */ 
 
-#include "common.h"
 #include "timer1.h"
+#include "parameters.h"
 #include <avr/io.h>
 
 

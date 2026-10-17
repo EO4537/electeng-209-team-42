@@ -9,13 +9,7 @@
 #ifndef COMMS_H_
 #define COMMS_H_
 
-#include "util.h"
-#include "display.h"
-
-#define VOLTAGE 0
-#define CURRENT 1
-#define POWER 2
-#define ENERGY 3
+#include <stdint.h>
 
 void comms_init(void);
 

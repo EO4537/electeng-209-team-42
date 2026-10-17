@@ -16,7 +16,5 @@ timer1.c
 
 uart.c
 
-util.c
-
 zerocrossing.c
 
