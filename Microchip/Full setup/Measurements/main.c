@@ -36,9 +36,9 @@ int main(void){
 			 ipeak_ma = calc_peak(i_buffer, MAX_SAMPLES ,  I_GAIN) * 1000;   // Peak current in mA
 			 power = calc_power(v_buffer , i_buffer , MAX_SAMPLES) + (RS*calc_rms(i_buffer, MAX_SAMPLES, I_GAIN));
 			 
-			 update_value(vrms, VOLTAGE);
-			 update_value(ipeak_ma, CURRENT);
-			 update_value(power, POWER);
+			 comms_update_value(vrms, VOLTAGE);
+			 comms_update_value(ipeak_ma, CURRENT);
+			 comms_update_value(power, POWER);
 			 adc_reset();
 		}
 		

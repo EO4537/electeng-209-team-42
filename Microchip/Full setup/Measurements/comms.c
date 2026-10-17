@@ -8,36 +8,60 @@
 #include "comms.h"
 #include "uart.h"
 #include "display.h"
-#include <avr/interrupt.h>
 
-uint8_t tempNum[4] = {3, 4, 5, 9};
-	
-volatile uint8_t displayCycles = 0;
+#include <avr/interrupt.h>
+#include <stdint.h>
+#include <stdbool.h>
+
+// A container for the number to be transmitted
+// Separated into the four digits to be displayed
+static uint8_t tempNum[4] = {3, 4, 5, 9};
+
+static volatile uint8_t displayCycles = 0;
+static bool active = true;
 
 ISR (TIMER0_COMPA_vect){
-	cycle_digit();
+	if (!active) {return;}
+	// Change the digit shown on the 7 segment display
+	// every 5ms to create the illusion of a whole number
+	display_cycle_digit();
 	
-	// Move to different display if 1s passed
-	displayCycles++;
+	// After 1s, change the value on the 7 segment display
+	// Transmit the current data over UART
 	if (displayCycles == 200){
 		displayCycles = 0;
 		
-		cycle_value();
-		transmit_data();
+		display_cycle_value();
+		uart_transmit();
 	}
+	
+	displayCycles++;
 }
 
 void comms_init(void){
-	init_display();
-	init_uart();
+	// Timer setup to CTC mode
+	TCCR0A &= ~(1 << WGM00);
+	TCCR0A |= (1 << WGM01);
+	TCCR0B &= ~(1 << WGM02);
+	
+	// Set to reset every ~5ms (4.992) (scaled to /64)
+	TCCR0B |= (1 << CS00);
+	TCCR0B |= (1 << CS01);
+	TCCR0B &= ~(1 << CS02);
+	OCR0A |= 156;
+	
+	TIMSK0 |= (1 << OCIE0A);
+	
+	display_init();
+	uart_init();
 }
 
-void update_value(float num, uint8_t type){
+void comms_update_value(float num, uint8_t type){
 	// Check if number is out of bounds of what can be displayed
-	/*if (num >= 9999.5 || num < 0.001f){
-		set_error(type);
+	if (num >= 9999.5 || num < 0.001f){
+		display_error(type);
 		return;
-	}*/
+	}
 	
 	// Scale number up or down so it can fit
 	// as a 4 digit whole number (with the decimal
@@ -72,14 +96,15 @@ void update_value(float num, uint8_t type){
 	newNum = newNum / 10;
 	
 	// Pass data into respective functions
-	update_display_value(tempNum, decimalPlace, type);
-	update_uart_value(tempNum, decimalPlace, type);
+	display_update_value(tempNum, decimalPlace, type);
+	uart_update_value(tempNum, decimalPlace, type);
 }
 
-void activate_display(void) {
-	activate_7seg_display();
+void comms_enable(void) {
+	active = true;
 }
 
-void deactivate_display(void) {
-	deactivate_7seg_display();
+void comms_disable(void) {
+	active = false;
+	display_blank();
 }
