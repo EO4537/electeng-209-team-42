@@ -2,7 +2,7 @@
  * adc.c
  *
  * Created: 9/09/2026 7:45:25 pm
- *  Author: Aditya Thapliyal
+ *  Author: Aditya
  */ 
 
 #include "common.h"
@@ -43,20 +43,20 @@ ISR(ADC_vect) {
 	uint16_t result = ADC;  // Store ADC conversion in result 
 	TIFR1 |= (1 << OCF1B);  // Clear compare flag B so next conversion works
 	
-	uint8_t sample_channel = channel;  // Channel form which this result came from 
+	uint8_t sample_channel = channel;  // Sets whether the result came from the voltage or current channel
 	
 	
-	// Change channel for next conversion
+	// Changes between voltage and current channel so they alternate for each next conversion
 	if(channel == V_CHANNEL){
 		channel = I_CHANNEL;
 	}
-	else {
+	else{
 		channel = V_CHANNEL;
 	}
 	ADMUX = (ADMUX & 0xF0) | channel;  // Change the channel bits to use different channel for next conversion
 	
 	
-	// Start recording at the first V sample after a zero crossing has occured
+	// Start recording samples at the first V sample after a zero crossing has occurs
 	if(adc_state == STATE_READY && zc_flag == 1 && sample_channel == V_CHANNEL){
 		adc_state = STATE_SAMPLING;
 		sample_number= 0;

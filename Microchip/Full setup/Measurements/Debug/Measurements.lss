@@ -23,11 +23,11 @@ Idx Name          Size      VMA       LMA       File off  Algn
                   CONTENTS, READONLY, DEBUGGING
   9 .debug_frame  00000408  00000000  00000000  00004bc0  2**2
                   CONTENTS, READONLY, DEBUGGING
- 10 .debug_str    000007e9  00000000  00000000  00004fc8  2**0
+ 10 .debug_str    00000768  00000000  00000000  00004fc8  2**0
                   CONTENTS, READONLY, DEBUGGING
- 11 .debug_loc    00000d50  00000000  00000000  000057b1  2**0
+ 11 .debug_loc    00000d50  00000000  00000000  00005730  2**0
                   CONTENTS, READONLY, DEBUGGING
- 12 .debug_ranges 00000180  00000000  00000000  00006501  2**0
+ 12 .debug_ranges 00000180  00000000  00000000  00006480  2**0
                   CONTENTS, READONLY, DEBUGGING
 
 Disassembly of section .text:
@@ -120,42 +120,66 @@ Disassembly of section .text:
       ee:	0c 94 00 00 	jmp	0	; 0x0 <__vectors>
 
 000000f2 <adc_init>:
+
+volatile uint8_t channel  = V_CHANNEL;
+volatile uint8_t sample_number = 0;
+
+void adc_init(){
+	ADMUX |= (1<< REFS0) | V_CHANNEL;  // Set reference to AVCC 5V and enable V_Channel(ADC0) 
       f2:	ec e7       	ldi	r30, 0x7C	; 124
       f4:	f0 e0       	ldi	r31, 0x00	; 0
       f6:	80 81       	ld	r24, Z
       f8:	80 64       	ori	r24, 0x40	; 64
       fa:	80 83       	st	Z, r24
+	ADCSRA |= (1 << ADEN) | (1 << ADATE) | (1 << ADIE) | (1 << ADPS1) | (1 << ADPS0);  // Enable ADC , auto trigger , interrupt  and set prescaler to 8 for a 250kHz ADC clock
       fc:	ea e7       	ldi	r30, 0x7A	; 122
       fe:	f0 e0       	ldi	r31, 0x00	; 0
      100:	80 81       	ld	r24, Z
      102:	8b 6a       	ori	r24, 0xAB	; 171
      104:	80 83       	st	Z, r24
+	ADCSRB |= (1 << ADTS2) | (1 << ADTS0); // Set ADC trigger source to Timer 1 compare match B
      106:	eb e7       	ldi	r30, 0x7B	; 123
      108:	f0 e0       	ldi	r31, 0x00	; 0
      10a:	80 81       	ld	r24, Z
      10c:	85 60       	ori	r24, 0x05	; 5
      10e:	80 83       	st	Z, r24
+	DDRB |= (1<<PB1); // Test pin : Set PB1 as output to check ADC conversion rate
      110:	84 b1       	in	r24, 0x04	; 4
      112:	82 60       	ori	r24, 0x02	; 2
      114:	84 b9       	out	0x04, r24	; 4
      116:	08 95       	ret
 
 00000118 <adc_reset>:
+}
+
+void adc_reset(){
+	zc_flag = 0; 
      118:	10 92 5f 01 	sts	0x015F, r1	; 0x80015f <zc_flag>
+	adc_state = STATE_READY;
      11c:	81 e0       	ldi	r24, 0x01	; 1
      11e:	80 93 4a 01 	sts	0x014A, r24	; 0x80014a <adc_state>
      122:	08 95       	ret
 
 00000124 <adc_data_ready>:
+}
+
+uint8_t adc_data_ready(){
+	if(adc_state == STATE_COMPLETED){
      124:	80 91 4a 01 	lds	r24, 0x014A	; 0x80014a <adc_state>
      128:	83 30       	cpi	r24, 0x03	; 3
      12a:	11 f4       	brne	.+4      	; 0x130 <adc_data_ready+0xc>
+		return 1;
      12c:	81 e0       	ldi	r24, 0x01	; 1
      12e:	08 95       	ret
+	}
+	return 0;
      130:	80 e0       	ldi	r24, 0x00	; 0
+}
      132:	08 95       	ret
 
 00000134 <__vector_21>:
+
+ISR(ADC_vect) {
      134:	1f 92       	push	r1
      136:	0f 92       	push	r0
      138:	0f b6       	in	r0, 0x3f	; 63
@@ -168,19 +192,35 @@ Disassembly of section .text:
      146:	9f 93       	push	r25
      148:	ef 93       	push	r30
      14a:	ff 93       	push	r31
+	// PORTB ^= (1<<PB1); // toggle PB1 after adc conversion is finished
+	static uint8_t sample_number = 0;
+	uint16_t result = ADC;  // Store ADC conversion in result 
      14c:	40 91 78 00 	lds	r20, 0x0078	; 0x800078 <__TEXT_REGION_LENGTH__+0x7f8078>
      150:	50 91 79 00 	lds	r21, 0x0079	; 0x800079 <__TEXT_REGION_LENGTH__+0x7f8079>
+	TIFR1 |= (1 << OCF1B);  // Clear compare flag B so next conversion works
      154:	86 b3       	in	r24, 0x16	; 22
      156:	84 60       	ori	r24, 0x04	; 4
      158:	86 bb       	out	0x16, r24	; 22
+	
+	uint8_t sample_channel = channel;  // Sets whether the result came from the voltage or current channel
      15a:	20 91 49 01 	lds	r18, 0x0149	; 0x800149 <channel>
+	
+	
+	// Changes between voltage and current channel so they alternate for each next conversion
+	if(channel == V_CHANNEL){
      15e:	80 91 49 01 	lds	r24, 0x0149	; 0x800149 <channel>
      162:	81 11       	cpse	r24, r1
      164:	04 c0       	rjmp	.+8      	; 0x16e <__vector_21+0x3a>
+		channel = I_CHANNEL;
      166:	81 e0       	ldi	r24, 0x01	; 1
      168:	80 93 49 01 	sts	0x0149, r24	; 0x800149 <channel>
      16c:	02 c0       	rjmp	.+4      	; 0x172 <__vector_21+0x3e>
+	}
+	else{
+		channel = V_CHANNEL;
      16e:	10 92 49 01 	sts	0x0149, r1	; 0x800149 <channel>
+	}
+	ADMUX = (ADMUX & 0xF0) | channel;  // Change the channel bits to use different channel for next conversion
      172:	ec e7       	ldi	r30, 0x7C	; 124
      174:	f0 e0       	ldi	r31, 0x00	; 0
      176:	80 81       	ld	r24, Z
@@ -188,6 +228,10 @@ Disassembly of section .text:
      17c:	80 7f       	andi	r24, 0xF0	; 240
      17e:	89 2b       	or	r24, r25
      180:	80 83       	st	Z, r24
+	
+	
+	// Start recording samples at the first V sample after a zero crossing has occurs
+	if(adc_state == STATE_READY && zc_flag == 1 && sample_channel == V_CHANNEL){
      182:	80 91 4a 01 	lds	r24, 0x014A	; 0x80014a <adc_state>
      186:	81 30       	cpi	r24, 0x01	; 1
      188:	59 f4       	brne	.+22     	; 0x1a0 <__vector_21+0x6c>
@@ -196,14 +240,22 @@ Disassembly of section .text:
      190:	39 f4       	brne	.+14     	; 0x1a0 <__vector_21+0x6c>
      192:	21 11       	cpse	r18, r1
      194:	05 c0       	rjmp	.+10     	; 0x1a0 <__vector_21+0x6c>
+		adc_state = STATE_SAMPLING;
      196:	82 e0       	ldi	r24, 0x02	; 2
      198:	80 93 4a 01 	sts	0x014A, r24	; 0x80014a <adc_state>
+		sample_number= 0;
      19c:	10 92 48 01 	sts	0x0148, r1	; 0x800148 <__data_end>
+	}
+	
+	// Start storing adc result in the v_buffer and i_buffer
+	if(adc_state == STATE_SAMPLING){
      1a0:	80 91 4a 01 	lds	r24, 0x014A	; 0x80014a <adc_state>
      1a4:	82 30       	cpi	r24, 0x02	; 2
      1a6:	f1 f4       	brne	.+60     	; 0x1e4 <__vector_21+0xb0>
+		if(sample_channel == V_CHANNEL){
      1a8:	21 11       	cpse	r18, r1
      1aa:	0a c0       	rjmp	.+20     	; 0x1c0 <__vector_21+0x8c>
+				v_buffer[sample_number] = result;
      1ac:	e0 91 48 01 	lds	r30, 0x0148	; 0x800148 <__data_end>
      1b0:	f0 e0       	ldi	r31, 0x00	; 0
      1b2:	ee 0f       	add	r30, r30
@@ -213,6 +265,9 @@ Disassembly of section .text:
      1ba:	51 83       	std	Z+1, r21	; 0x01
      1bc:	40 83       	st	Z, r20
      1be:	12 c0       	rjmp	.+36     	; 0x1e4 <__vector_21+0xb0>
+		}
+		else{
+			i_buffer[sample_number] = result;
      1c0:	80 91 48 01 	lds	r24, 0x0148	; 0x800148 <__data_end>
      1c4:	e8 2f       	mov	r30, r24
      1c6:	f0 e0       	ldi	r31, 0x00	; 0
@@ -222,12 +277,19 @@ Disassembly of section .text:
      1ce:	fd 4f       	sbci	r31, 0xFD	; 253
      1d0:	51 83       	std	Z+1, r21	; 0x01
      1d2:	40 83       	st	Z, r20
+			sample_number++;
      1d4:	8f 5f       	subi	r24, 0xFF	; 255
      1d6:	80 93 48 01 	sts	0x0148, r24	; 0x800148 <__data_end>
+			if(sample_number >= MAX_SAMPLES){       
      1da:	8f 35       	cpi	r24, 0x5F	; 95
      1dc:	18 f0       	brcs	.+6      	; 0x1e4 <__vector_21+0xb0>
+				adc_state = STATE_COMPLETED;
      1de:	83 e0       	ldi	r24, 0x03	; 3
      1e0:	80 93 4a 01 	sts	0x014A, r24	; 0x80014a <adc_state>
+			}
+		}
+	}
+}
      1e4:	ff 91       	pop	r31
      1e6:	ef 91       	pop	r30
      1e8:	9f 91       	pop	r25
@@ -242,12 +304,19 @@ Disassembly of section .text:
      1fa:	18 95       	reti
 
 000001fc <counts_to_value>:
+	}
+	float volts = (max * VREF / ADC_STEPS) - VOFF;
+	return volts / gain;
+}
+
+static float counts_to_value(uint16_t counts , float gain){
      1fc:	cf 92       	push	r12
      1fe:	df 92       	push	r13
      200:	ef 92       	push	r14
      202:	ff 92       	push	r15
      204:	6a 01       	movw	r12, r20
      206:	7b 01       	movw	r14, r22
+	float volts = (counts * VREF / ADC_STEPS) - VOFF;
      208:	bc 01       	movw	r22, r24
      20a:	80 e0       	ldi	r24, 0x00	; 0
      20c:	90 e0       	ldi	r25, 0x00	; 0
@@ -267,9 +336,11 @@ Disassembly of section .text:
      22e:	46 e0       	ldi	r20, 0x06	; 6
      230:	50 e4       	ldi	r21, 0x40	; 64
      232:	0e 94 02 06 	call	0xc04	; 0xc04 <__subsf3>
+	return volts/ gain;
      236:	a7 01       	movw	r20, r14
      238:	96 01       	movw	r18, r12
      23a:	0e 94 74 06 	call	0xce8	; 0xce8 <__divsf3>
+}
      23e:	ff 90       	pop	r15
      240:	ef 90       	pop	r14
      242:	df 90       	pop	r13
@@ -277,6 +348,12 @@ Disassembly of section .text:
      246:	08 95       	ret
 
 00000248 <calc_rms>:
+ */ 
+
+#include "calculation.h"
+#include <math.h>
+
+float calc_rms(volatile uint16_t *buffer, uint8_t n, float gain){
      248:	8f 92       	push	r8
      24a:	9f 92       	push	r9
      24c:	af 92       	push	r10
@@ -293,11 +370,21 @@ Disassembly of section .text:
      262:	06 2f       	mov	r16, r22
      264:	49 01       	movw	r8, r18
      266:	5a 01       	movw	r10, r20
+	float sum=0;
+	for(uint8_t i =0 ; i < n ; i++){
      268:	10 e0       	ldi	r17, 0x00	; 0
+
+#include "calculation.h"
+#include <math.h>
+
+float calc_rms(volatile uint16_t *buffer, uint8_t n, float gain){
+	float sum=0;
      26a:	c1 2c       	mov	r12, r1
      26c:	d1 2c       	mov	r13, r1
      26e:	76 01       	movw	r14, r12
+	for(uint8_t i =0 ; i < n ; i++){
      270:	2f c0       	rjmp	.+94     	; 0x2d0 <calc_rms+0x88>
+		float volts = (buffer[i] * VREF/ ADC_STEPS) - VOFF;  // Analogue Voltage at pin without offset
      272:	e1 2f       	mov	r30, r17
      274:	f0 e0       	ldi	r31, 0x00	; 0
      276:	ee 0f       	add	r30, r30
@@ -324,9 +411,11 @@ Disassembly of section .text:
      2a6:	46 e0       	ldi	r20, 0x06	; 6
      2a8:	50 e4       	ldi	r21, 0x40	; 64
      2aa:	0e 94 02 06 	call	0xc04	; 0xc04 <__subsf3>
+		float value = volts/gain;  // Real source voltage
      2ae:	a5 01       	movw	r20, r10
      2b0:	94 01       	movw	r18, r8
      2b2:	0e 94 74 06 	call	0xce8	; 0xce8 <__divsf3>
+		sum = sum + (value * value);  // Squaring voltage and adding them
      2b6:	9b 01       	movw	r18, r22
      2b8:	ac 01       	movw	r20, r24
      2ba:	0e 94 cc 07 	call	0xf98	; 0xf98 <__mulsf3>
@@ -337,9 +426,20 @@ Disassembly of section .text:
      2c6:	0e 94 03 06 	call	0xc06	; 0xc06 <__addsf3>
      2ca:	6b 01       	movw	r12, r22
      2cc:	7c 01       	movw	r14, r24
+#include "calculation.h"
+#include <math.h>
+
+float calc_rms(volatile uint16_t *buffer, uint8_t n, float gain){
+	float sum=0;
+	for(uint8_t i =0 ; i < n ; i++){
      2ce:	1f 5f       	subi	r17, 0xFF	; 255
      2d0:	10 17       	cp	r17, r16
      2d2:	78 f2       	brcs	.-98     	; 0x272 <calc_rms+0x2a>
+		float volts = (buffer[i] * VREF/ ADC_STEPS) - VOFF;  // Analogue Voltage at pin without offset
+		float value = volts/gain;  // Real source voltage
+		sum = sum + (value * value);  // Squaring voltage and adding them
+	}
+	return sqrt(sum/n);  // Squareroot the whole expression
      2d4:	60 2f       	mov	r22, r16
      2d6:	70 e0       	ldi	r23, 0x00	; 0
      2d8:	80 e0       	ldi	r24, 0x00	; 0
@@ -351,6 +451,7 @@ Disassembly of section .text:
      2e6:	b6 01       	movw	r22, r12
      2e8:	0e 94 74 06 	call	0xce8	; 0xce8 <__divsf3>
      2ec:	0e 94 3f 08 	call	0x107e	; 0x107e <sqrt>
+}
      2f0:	df 91       	pop	r29
      2f2:	cf 91       	pop	r28
      2f4:	1f 91       	pop	r17
@@ -366,6 +467,8 @@ Disassembly of section .text:
      308:	08 95       	ret
 
 0000030a <calc_peak>:
+
+float calc_peak(volatile uint16_t *buffer, uint8_t n, float gain){
      30a:	cf 92       	push	r12
      30c:	df 92       	push	r13
      30e:	ef 92       	push	r14
@@ -374,10 +477,20 @@ Disassembly of section .text:
      314:	86 2f       	mov	r24, r22
      316:	69 01       	movw	r12, r18
      318:	7a 01       	movw	r14, r20
+	uint16_t max = 0;
+	for (uint8_t i = 0; i < n; i++){
      31a:	90 e0       	ldi	r25, 0x00	; 0
+	}
+	return sqrt(sum/n);  // Squareroot the whole expression
+}
+
+float calc_peak(volatile uint16_t *buffer, uint8_t n, float gain){
+	uint16_t max = 0;
      31c:	60 e0       	ldi	r22, 0x00	; 0
      31e:	70 e0       	ldi	r23, 0x00	; 0
+	for (uint8_t i = 0; i < n; i++){
      320:	0e c0       	rjmp	.+28     	; 0x33e <calc_peak+0x34>
+		if (buffer[i] > max){
      322:	e9 2f       	mov	r30, r25
      324:	f0 e0       	ldi	r31, 0x00	; 0
      326:	ee 0f       	add	r30, r30
@@ -389,11 +502,23 @@ Disassembly of section .text:
      332:	62 17       	cp	r22, r18
      334:	73 07       	cpc	r23, r19
      336:	10 f4       	brcc	.+4      	; 0x33c <calc_peak+0x32>
+			max = buffer[i]; // Store max value
      338:	60 81       	ld	r22, Z
      33a:	71 81       	ldd	r23, Z+1	; 0x01
+	return sqrt(sum/n);  // Squareroot the whole expression
+}
+
+float calc_peak(volatile uint16_t *buffer, uint8_t n, float gain){
+	uint16_t max = 0;
+	for (uint8_t i = 0; i < n; i++){
      33c:	9f 5f       	subi	r25, 0xFF	; 255
      33e:	98 17       	cp	r25, r24
      340:	80 f3       	brcs	.-32     	; 0x322 <calc_peak+0x18>
+		if (buffer[i] > max){
+			max = buffer[i]; // Store max value
+		}
+	}
+	float volts = (max * VREF / ADC_STEPS) - VOFF;
      342:	80 e0       	ldi	r24, 0x00	; 0
      344:	90 e0       	ldi	r25, 0x00	; 0
      346:	0e 94 15 07 	call	0xe2a	; 0xe2a <__floatunsisf>
@@ -412,9 +537,11 @@ Disassembly of section .text:
      366:	46 e0       	ldi	r20, 0x06	; 6
      368:	50 e4       	ldi	r21, 0x40	; 64
      36a:	0e 94 02 06 	call	0xc04	; 0xc04 <__subsf3>
+	return volts / gain;
      36e:	a7 01       	movw	r20, r14
      370:	96 01       	movw	r18, r12
      372:	0e 94 74 06 	call	0xce8	; 0xce8 <__divsf3>
+}
      376:	ff 90       	pop	r15
      378:	ef 90       	pop	r14
      37a:	df 90       	pop	r13
@@ -422,6 +549,12 @@ Disassembly of section .text:
      37e:	08 95       	ret
 
 00000380 <calc_power>:
+static float counts_to_value(uint16_t counts , float gain){
+	float volts = (counts * VREF / ADC_STEPS) - VOFF;
+	return volts/ gain;
+}
+
+float calc_power(volatile uint16_t *v_buffer, volatile uint16_t *i_buffer, uint8_t n){
      380:	2f 92       	push	r2
      382:	3f 92       	push	r3
      384:	4f 92       	push	r4
@@ -452,13 +585,25 @@ Disassembly of section .text:
      3b6:	8d 87       	std	Y+13, r24	; 0x0d
      3b8:	8b 01       	movw	r16, r22
      3ba:	44 2e       	mov	r4, r20
+	float sum=0;
+	
+	for (uint8_t i =1; i < n-1; i++){  // Skip fist and last sample so every term can be calculated
      3bc:	55 24       	eor	r5, r5
      3be:	53 94       	inc	r5
+	float volts = (counts * VREF / ADC_STEPS) - VOFF;
+	return volts/ gain;
+}
+
+float calc_power(volatile uint16_t *v_buffer, volatile uint16_t *i_buffer, uint8_t n){
+	float sum=0;
      3c0:	1d 82       	std	Y+5, r1	; 0x05
      3c2:	1e 82       	std	Y+6, r1	; 0x06
      3c4:	1f 82       	std	Y+7, r1	; 0x07
      3c6:	18 86       	std	Y+8, r1	; 0x08
+	
+	for (uint8_t i =1; i < n-1; i++){  // Skip fist and last sample so every term can be calculated
      3c8:	8a c0       	rjmp	.+276    	; 0x4de <__EEPROM_REGION_LENGTH__+0xde>
+		float v_now  = counts_to_value(v_buffer[i], V_GAIN);
      3ca:	65 2c       	mov	r6, r5
      3cc:	71 2c       	mov	r7, r1
      3ce:	13 01       	movw	r2, r6
@@ -477,6 +622,7 @@ Disassembly of section .text:
      3e8:	0e 94 fe 00 	call	0x1fc	; 0x1fc <counts_to_value>
      3ec:	6b 01       	movw	r12, r22
      3ee:	7c 01       	movw	r14, r24
+		float v_next = counts_to_value(v_buffer[i + 1], V_GAIN);
      3f0:	f3 01       	movw	r30, r6
      3f2:	31 96       	adiw	r30, 0x01	; 1
      3f4:	ee 0f       	add	r30, r30
@@ -496,6 +642,7 @@ Disassembly of section .text:
      412:	7a 83       	std	Y+2, r23	; 0x02
      414:	8b 83       	std	Y+3, r24	; 0x03
      416:	9c 83       	std	Y+4, r25	; 0x04
+		float i_previous = counts_to_value(i_buffer[i - 1], I_GAIN);
      418:	f3 01       	movw	r30, r6
      41a:	e1 50       	subi	r30, 0x01	; 1
      41c:	f0 48       	sbci	r31, 0x80	; 128
@@ -514,6 +661,7 @@ Disassembly of section .text:
      438:	7a 87       	std	Y+10, r23	; 0x0a
      43a:	8b 87       	std	Y+11, r24	; 0x0b
      43c:	9c 87       	std	Y+12, r25	; 0x0c
+		float i_now  = counts_to_value(i_buffer[i], I_GAIN);
      43e:	f8 01       	movw	r30, r16
      440:	e2 0d       	add	r30, r2
      442:	f3 1d       	adc	r31, r3
@@ -526,6 +674,8 @@ Disassembly of section .text:
      450:	0e 94 fe 00 	call	0x1fc	; 0x1fc <counts_to_value>
      454:	4b 01       	movw	r8, r22
      456:	5c 01       	movw	r10, r24
+		
+		float v_interpolated = (v_now + v_next) / 2;  // V at the instant of I[i]
      458:	29 81       	ldd	r18, Y+1	; 0x01
      45a:	3a 81       	ldd	r19, Y+2	; 0x02
      45c:	4b 81       	ldd	r20, Y+3	; 0x03
@@ -542,6 +692,7 @@ Disassembly of section .text:
      476:	7a 83       	std	Y+2, r23	; 0x02
      478:	8b 83       	std	Y+3, r24	; 0x03
      47a:	9c 83       	std	Y+4, r25	; 0x04
+		float i_interpolated = (i_previous + i_now) / 2; // I at the instant of V[i]
      47c:	a5 01       	movw	r20, r10
      47e:	94 01       	movw	r18, r8
      480:	69 85       	ldd	r22, Y+9	; 0x09
@@ -556,6 +707,8 @@ Disassembly of section .text:
      494:	0e 94 cc 07 	call	0xf98	; 0xf98 <__mulsf3>
      498:	9b 01       	movw	r18, r22
      49a:	ac 01       	movw	r20, r24
+		
+		sum = sum + (v_now * i_interpolated) + (v_interpolated * i_now);
      49c:	c7 01       	movw	r24, r14
      49e:	b6 01       	movw	r22, r12
      4a0:	0e 94 cc 07 	call	0xf98	; 0xf98 <__mulsf3>
@@ -584,6 +737,12 @@ Disassembly of section .text:
      4d6:	7e 83       	std	Y+6, r23	; 0x06
      4d8:	8f 83       	std	Y+7, r24	; 0x07
      4da:	98 87       	std	Y+8, r25	; 0x08
+}
+
+float calc_power(volatile uint16_t *v_buffer, volatile uint16_t *i_buffer, uint8_t n){
+	float sum=0;
+	
+	for (uint8_t i =1; i < n-1; i++){  // Skip fist and last sample so every term can be calculated
      4dc:	53 94       	inc	r5
      4de:	85 2d       	mov	r24, r5
      4e0:	90 e0       	ldi	r25, 0x00	; 0
@@ -596,6 +755,12 @@ Disassembly of section .text:
      4ee:	93 07       	cpc	r25, r19
      4f0:	0c f4       	brge	.+2      	; 0x4f4 <__EEPROM_REGION_LENGTH__+0xf4>
      4f2:	6b cf       	rjmp	.-298    	; 0x3ca <calc_power+0x4a>
+		float i_interpolated = (i_previous + i_now) / 2; // I at the instant of V[i]
+		
+		sum = sum + (v_now * i_interpolated) + (v_interpolated * i_now);
+	}
+	
+	float power = sum/ (2.0 * (n-2));
      4f4:	62 50       	subi	r22, 0x02	; 2
      4f6:	71 09       	sbc	r23, r1
      4f8:	07 2e       	mov	r0, r23
@@ -613,6 +778,10 @@ Disassembly of section .text:
      514:	8f 81       	ldd	r24, Y+7	; 0x07
      516:	98 85       	ldd	r25, Y+8	; 0x08
      518:	0e 94 74 06 	call	0xce8	; 0xce8 <__divsf3>
+	return power; 
+	// return power * POWER_CORRECTION;
+	
+}
      51c:	2e 96       	adiw	r28, 0x0e	; 14
      51e:	0f b6       	in	r0, 0x3f	; 63
      520:	f8 94       	cli
@@ -644,7 +813,7 @@ Disassembly of section .text:
 
 uint8_t tempNum[4] = {3, 4, 5, 9};
 
-void comms_init(void) {
+void comms_init(void){
 	init_display();
      54e:	0e 94 41 04 	call	0x882	; 0x882 <init_display>
 	init_uart();
@@ -654,7 +823,7 @@ void comms_init(void) {
 00000558 <update_value>:
 }
 
-void update_value(float num, uint8_t type) {
+void update_value(float num, uint8_t type){
      558:	cf 92       	push	r12
      55a:	df 92       	push	r13
      55c:	ef 92       	push	r14
@@ -669,7 +838,7 @@ void update_value(float num, uint8_t type) {
 	// place tracked separately)
 	uint8_t decimalPlace = 0;
 	
-	if (num >= 1) {
+	if (num >= 1){
      56a:	20 e0       	ldi	r18, 0x00	; 0
      56c:	30 e0       	ldi	r19, 0x00	; 0
      56e:	40 e8       	ldi	r20, 0x80	; 128
@@ -678,7 +847,7 @@ void update_value(float num, uint8_t type) {
      576:	88 23       	and	r24, r24
      578:	6c f4       	brge	.+26     	; 0x594 <update_value+0x3c>
      57a:	18 c0       	rjmp	.+48     	; 0x5ac <update_value+0x54>
-		while (num < 999.95) {
+		while (num < 999.95){
 			num = num * 10;
      57c:	20 e0       	ldi	r18, 0x00	; 0
      57e:	30 e0       	ldi	r19, 0x00	; 0
@@ -697,8 +866,8 @@ void update_value(float num, uint8_t type) {
 	// place tracked separately)
 	uint8_t decimalPlace = 0;
 	
-	if (num >= 1) {
-		while (num < 999.95) {
+	if (num >= 1){
+		while (num < 999.95){
      596:	2d ec       	ldi	r18, 0xCD	; 205
      598:	3c ef       	ldi	r19, 0xFC	; 252
      59a:	49 e7       	ldi	r20, 0x79	; 121
@@ -712,7 +881,8 @@ void update_value(float num, uint8_t type) {
 			num = num * 10;
 			decimalPlace++;
 		}
-	} else {
+	} 
+	else{
 		num = num * 1000;
      5ac:	20 e0       	ldi	r18, 0x00	; 0
      5ae:	30 e0       	ldi	r19, 0x00	; 0
@@ -1041,7 +1211,7 @@ volatile uint8_t place = 0;
 
 bool active = true;
 
-ISR (TIMER0_COMPA_vect) {
+ISR (TIMER0_COMPA_vect){
      7b0:	1f 92       	push	r1
      7b2:	0f 92       	push	r0
      7b4:	0f b6       	in	r0, 0x3f	; 63
@@ -1059,7 +1229,7 @@ ISR (TIMER0_COMPA_vect) {
      7cc:	bf 93       	push	r27
      7ce:	ef 93       	push	r30
      7d0:	ff 93       	push	r31
-	if (active == false) {
+	if (active == false){
      7d2:	80 91 04 01 	lds	r24, 0x0104	; 0x800104 <active>
      7d6:	88 23       	and	r24, r24
      7d8:	09 f4       	brne	.+2      	; 0x7dc <__vector_14+0x2c>
@@ -1100,7 +1270,7 @@ ISR (TIMER0_COMPA_vect) {
      816:	80 91 4d 01 	lds	r24, 0x014D	; 0x80014d <cycles>
      81a:	8f 5f       	subi	r24, 0xFF	; 255
      81c:	80 93 4d 01 	sts	0x014D, r24	; 0x80014d <cycles>
-	if (cycles == 200) {
+	if (cycles == 200){
      820:	80 91 4d 01 	lds	r24, 0x014D	; 0x80014d <cycles>
      824:	88 3c       	cpi	r24, 0xC8	; 200
      826:	e1 f4       	brne	.+56     	; 0x860 <__DATA_REGION_LENGTH__+0x60>
@@ -1398,23 +1568,33 @@ int main(void){
      a24:	a1 cf       	rjmp	.-190    	; 0x968 <main+0x16>
 
 00000a26 <timer1_init>:
+#include <avr/io.h>
+
+
+
+void timer1_init(){
+	DDRB |= (1 << PB2); // Set PB2 as output to toggle at every sample start (Soc pin)
      a26:	84 b1       	in	r24, 0x04	; 4
      a28:	84 60       	ori	r24, 0x04	; 4
      a2a:	84 b9       	out	0x04, r24	; 4
+	TCCR1A |= (1 << COM1B0);                // Toggle OC1B on compare match B
      a2c:	e0 e8       	ldi	r30, 0x80	; 128
      a2e:	f0 e0       	ldi	r31, 0x00	; 0
      a30:	80 81       	ld	r24, Z
      a32:	80 61       	ori	r24, 0x10	; 16
      a34:	80 83       	st	Z, r24
+	TCCR1B |= (1 << WGM12) | (1 << CS10);   // Timer 1 runs in CTC mode with prescaler of 1 
      a36:	e1 e8       	ldi	r30, 0x81	; 129
      a38:	f0 e0       	ldi	r31, 0x00	; 0
      a3a:	80 81       	ld	r24, Z
      a3c:	89 60       	ori	r24, 0x09	; 9
      a3e:	80 83       	st	Z, r24
+	OCR1A = TRIGGER_TICKS - 1;     // Set the sampling rate using OCR
      a40:	81 ed       	ldi	r24, 0xD1	; 209
      a42:	90 e0       	ldi	r25, 0x00	; 0
      a44:	90 93 89 00 	sts	0x0089, r25	; 0x800089 <__TEXT_REGION_LENGTH__+0x7f8089>
      a48:	80 93 88 00 	sts	0x0088, r24	; 0x800088 <__TEXT_REGION_LENGTH__+0x7f8088>
+	OCR1B = 100; // Compare match B triggers the ADC 
      a4c:	84 e6       	ldi	r24, 0x64	; 100
      a4e:	90 e0       	ldi	r25, 0x00	; 0
      a50:	90 93 8b 00 	sts	0x008B, r25	; 0x80008b <__TEXT_REGION_LENGTH__+0x7f808b>
@@ -1439,7 +1619,7 @@ void uart_transmit_char(uint8_t character){
 00000a68 <transmit_header>:
 }
 
-void transmit_header(void) {
+void transmit_header(void){
      a68:	cf 93       	push	r28
      a6a:	df 93       	push	r29
 	uart_transmit_char(13);  // Creating new line
@@ -1450,7 +1630,7 @@ void transmit_header(void) {
      a74:	0e 94 2d 05 	call	0xa5a	; 0xa5a <uart_transmit_char>
 	
 	// Loop through header string and print
-	for (int i =0 ; i <strlen(header); i++) {
+	for (int i =0 ; i <strlen(header); i++){
      a78:	c0 e0       	ldi	r28, 0x00	; 0
      a7a:	d0 e0       	ldi	r29, 0x00	; 0
      a7c:	07 c0       	rjmp	.+14     	; 0xa8c <transmit_header+0x24>
@@ -1460,12 +1640,12 @@ void transmit_header(void) {
      a82:	fe 4f       	sbci	r31, 0xFE	; 254
      a84:	80 81       	ld	r24, Z
      a86:	0e 94 2d 05 	call	0xa5a	; 0xa5a <uart_transmit_char>
-void transmit_header(void) {
+void transmit_header(void){
 	uart_transmit_char(13);  // Creating new line
 	uart_transmit_char(10);
 	
 	// Loop through header string and print
-	for (int i =0 ; i <strlen(header); i++) {
+	for (int i =0 ; i <strlen(header); i++){
      a8a:	21 96       	adiw	r28, 0x01	; 1
      a8c:	c4 32       	cpi	r28, 0x24	; 36
      a8e:	d1 05       	cpc	r29, r1
@@ -1489,7 +1669,7 @@ void transmit_header(void) {
 // Tracker for how many times data has been printed
 uint8_t linesPrinted = 0;
 
-void init_uart(void) {
+void init_uart(void){
 	UBRR0 = 12;
      aa4:	8c e0       	ldi	r24, 0x0C	; 12
      aa6:	90 e0       	ldi	r25, 0x00	; 0
@@ -1518,7 +1698,7 @@ void init_uart(void) {
 	uart_transmit_char(10);
 }
 
-void transmit_data(void) {
+void transmit_data(void){
      aca:	0f 93       	push	r16
      acc:	1f 93       	push	r17
      ace:	cf 93       	push	r28
@@ -1531,12 +1711,12 @@ void transmit_data(void) {
      ada:	0e 94 2d 05 	call	0xa5a	; 0xa5a <uart_transmit_char>
 	
 	// Loop through each data type
-	for (int i = 0; i < 4; i++) {
+	for (int i = 0; i < 4; i++){
      ade:	c0 e0       	ldi	r28, 0x00	; 0
      ae0:	d0 e0       	ldi	r29, 0x00	; 0
      ae2:	21 c0       	rjmp	.+66     	; 0xb26 <transmit_data+0x5c>
 		// Print each digit (and decimal)
-		for (int j = 4; j >= 0; j--) {
+		for (int j = 4; j >= 0; j--){
 			uart_transmit_char(uartData[i][j]);
      ae4:	fe 01       	movw	r30, r28
      ae6:	ee 0f       	add	r30, r30
@@ -1554,9 +1734,9 @@ void transmit_data(void) {
 	uart_transmit_char(10);
 	
 	// Loop through each data type
-	for (int i = 0; i < 4; i++) {
+	for (int i = 0; i < 4; i++){
 		// Print each digit (and decimal)
-		for (int j = 4; j >= 0; j--) {
+		for (int j = 4; j >= 0; j--){
      b00:	01 50       	subi	r16, 0x01	; 1
      b02:	11 09       	sbc	r17, r1
      b04:	02 c0       	rjmp	.+4      	; 0xb0a <transmit_data+0x40>
@@ -1571,33 +1751,33 @@ void transmit_data(void) {
 		}
 		
 		// Print spacing between numbers
-		for (int j = 0; j < 5; j++) {
+		for (int j = 0; j < 5; j++){
 			uart_transmit_char(32);	
      b14:	80 e2       	ldi	r24, 0x20	; 32
      b16:	0e 94 2d 05 	call	0xa5a	; 0xa5a <uart_transmit_char>
-		for (int j = 4; j >= 0; j--) {
+		for (int j = 4; j >= 0; j--){
 			uart_transmit_char(uartData[i][j]);
 		}
 		
 		// Print spacing between numbers
-		for (int j = 0; j < 5; j++) {
+		for (int j = 0; j < 5; j++){
      b1a:	0f 5f       	subi	r16, 0xFF	; 255
      b1c:	1f 4f       	sbci	r17, 0xFF	; 255
      b1e:	05 30       	cpi	r16, 0x05	; 5
      b20:	11 05       	cpc	r17, r1
      b22:	c4 f3       	brlt	.-16     	; 0xb14 <transmit_data+0x4a>
-void transmit_data(void) {
+void transmit_data(void){
 	uart_transmit_char(13);  // Creating new line
 	uart_transmit_char(10);
 	
 	// Loop through each data type
-	for (int i = 0; i < 4; i++) {
+	for (int i = 0; i < 4; i++){
      b24:	21 96       	adiw	r28, 0x01	; 1
      b26:	c4 30       	cpi	r28, 0x04	; 4
      b28:	d1 05       	cpc	r29, r1
      b2a:	6c f3       	brlt	.-38     	; 0xb06 <transmit_data+0x3c>
 		// Print spacing between numbers
-		for (int j = 0; j < 5; j++) {
+		for (int j = 0; j < 5; j++){
 			uart_transmit_char(32);	
 		}
 	}
@@ -1613,7 +1793,7 @@ void transmit_data(void) {
 	transmit_header();
 }
 
-void update_uart_value(uint8_t *num, uint8_t decimal, uint8_t type) {
+void update_uart_value(uint8_t *num, uint8_t decimal, uint8_t type){
      b36:	0f 93       	push	r16
      b38:	1f 93       	push	r17
      b3a:	cf 93       	push	r28
@@ -1623,7 +1803,7 @@ void update_uart_value(uint8_t *num, uint8_t decimal, uint8_t type) {
      b42:	04 2f       	mov	r16, r20
 	// Ensure the header is printed occasionally so it is always visible
 	// with data underneath it.
-	if (linesPrinted == 10) {
+	if (linesPrinted == 10){
      b44:	80 91 5e 01 	lds	r24, 0x015E	; 0x80015e <linesPrinted>
      b48:	8a 30       	cpi	r24, 0x0A	; 10
      b4a:	21 f4       	brne	.+8      	; 0xb54 <update_uart_value+0x1e>
@@ -1636,7 +1816,7 @@ void update_uart_value(uint8_t *num, uint8_t decimal, uint8_t type) {
 	transmit_header();
 }
 
-void update_uart_value(uint8_t *num, uint8_t decimal, uint8_t type) {
+void update_uart_value(uint8_t *num, uint8_t decimal, uint8_t type){
      b54:	24 e0       	ldi	r18, 0x04	; 4
      b56:	33 e0       	ldi	r19, 0x03	; 3
      b58:	29 c0       	rjmp	.+82     	; 0xbac <update_uart_value+0x76>
@@ -1644,7 +1824,7 @@ void update_uart_value(uint8_t *num, uint8_t decimal, uint8_t type) {
 	// Store each digit of the number as it's ascii value
 	// Insert decimal point where specified
 	uint8_t digitPlace = 3;
-	for (int8_t charPlace = 4; charPlace >= 0; charPlace--) {
+	for (int8_t charPlace = 4; charPlace >= 0; charPlace--){
 		uartData[type][charPlace] = num[digitPlace] + 48;
      b5a:	80 2f       	mov	r24, r16
      b5c:	90 e0       	ldi	r25, 0x00	; 0
@@ -1667,7 +1847,7 @@ void update_uart_value(uint8_t *num, uint8_t decimal, uint8_t type) {
      b7e:	fa 95       	dec	r31
      b80:	40 5d       	subi	r20, 0xD0	; 208
      b82:	40 83       	st	Z, r20
-		if (decimal == digitPlace) {
+		if (decimal == digitPlace){
      b84:	31 13       	cpse	r19, r17
      b86:	10 c0       	rjmp	.+32     	; 0xba8 <update_uart_value+0x72>
 			charPlace--;
@@ -1696,7 +1876,7 @@ void update_uart_value(uint8_t *num, uint8_t decimal, uint8_t type) {
 	// Store each digit of the number as it's ascii value
 	// Insert decimal point where specified
 	uint8_t digitPlace = 3;
-	for (int8_t charPlace = 4; charPlace >= 0; charPlace--) {
+	for (int8_t charPlace = 4; charPlace >= 0; charPlace--){
      baa:	21 50       	subi	r18, 0x01	; 1
      bac:	22 23       	and	r18, r18
      bae:	ac f6       	brge	.-86     	; 0xb5a <update_uart_value+0x24>
@@ -1719,30 +1899,44 @@ void update_uart_value(uint8_t *num, uint8_t decimal, uint8_t type) {
      bc6:	08 95       	ret
 
 00000bc8 <zc_init>:
+
+volatile uint8_t zc_flag = 0;
+
+
+void zc_init(){
+	DDRD &= ~(1 << PD2);   //  Set PD2 (INT0) as input
      bc8:	8a b1       	in	r24, 0x0a	; 10
      bca:	8b 7f       	andi	r24, 0xFB	; 251
      bcc:	8a b9       	out	0x0a, r24	; 10
+	EICRA |= (1 << ISC01) | (1 << ISC00);   // Rising edge on INT0 generates an interrupt
      bce:	e9 e6       	ldi	r30, 0x69	; 105
      bd0:	f0 e0       	ldi	r31, 0x00	; 0
      bd2:	80 81       	ld	r24, Z
      bd4:	83 60       	ori	r24, 0x03	; 3
      bd6:	80 83       	st	Z, r24
+	EIMSK |= (1 << INT0);     // Enable INT0
      bd8:	8d b3       	in	r24, 0x1d	; 29
      bda:	81 60       	ori	r24, 0x01	; 1
      bdc:	8d bb       	out	0x1d, r24	; 29
      bde:	08 95       	ret
 
 00000be0 <__vector_1>:
+}
+
+ISR(INT0_vect){
      be0:	1f 92       	push	r1
      be2:	0f 92       	push	r0
      be4:	0f b6       	in	r0, 0x3f	; 63
      be6:	0f 92       	push	r0
      be8:	11 24       	eor	r1, r1
      bea:	8f 93       	push	r24
+	if (adc_state == STATE_READY){
      bec:	80 91 4a 01 	lds	r24, 0x014A	; 0x80014a <adc_state>
      bf0:	81 30       	cpi	r24, 0x01	; 1
      bf2:	11 f4       	brne	.+4      	; 0xbf8 <__vector_1+0x18>
+		zc_flag = 1;
      bf4:	80 93 5f 01 	sts	0x015F, r24	; 0x80015f <zc_flag>
+	}
      bf8:	8f 91       	pop	r24
      bfa:	0f 90       	pop	r0
      bfc:	0f be       	out	0x3f, r0	; 63

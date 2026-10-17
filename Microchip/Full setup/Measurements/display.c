@@ -2,7 +2,7 @@
  * display.c
  *
  * Created: 1/10/2026 4:22:26 PM
- *  Author: ethan
+ *  Author: Ethan
  */ 
 #include <avr/io.h>
 #include <avr/interrupt.h>
@@ -49,8 +49,8 @@ volatile uint8_t place = 0;
 
 bool active = true;
 
-ISR (TIMER0_COMPA_vect) {
-	if (active == false) {
+ISR (TIMER0_COMPA_vect){
+	if (active == false){
 		return;
 	}
 	
@@ -63,7 +63,7 @@ ISR (TIMER0_COMPA_vect) {
 	
 	// Move to different display if 1s passed
 	cycles++;
-	if (cycles == 200) {
+	if (cycles == 200){
 		// Reset LEDs
 		PORTB &= 0b11110000;
 		cycles = 0;

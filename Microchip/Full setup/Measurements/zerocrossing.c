@@ -2,7 +2,7 @@
  * zerocrossing.c
  *
  * Created: 12/10/2026 12:46:02 pm
- *  Author: aditya 
+ *  Author: Aditya 
  */ 
 
 #include "adc.h"
@@ -21,6 +21,6 @@ void zc_init(){
 
 ISR(INT0_vect){
 	if (adc_state == STATE_READY){
-		zc_flag =1;
+		zc_flag = 1;
 	}
 }

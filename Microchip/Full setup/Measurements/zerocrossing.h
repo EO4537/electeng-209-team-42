@@ -2,7 +2,7 @@
  * zerocrossing.h
  *
  * Created: 12/10/2026 12:44:57 pm
- *  Author: adity
+ *  Author: Aditya
  */ 
 
 

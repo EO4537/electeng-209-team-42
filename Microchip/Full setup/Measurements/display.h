@@ -2,7 +2,7 @@
  * display.h
  *
  * Created: 1/10/2026 4:22:45 PM
- *  Author: ethan
+ *  Author: Ethan
  */ 
 
 

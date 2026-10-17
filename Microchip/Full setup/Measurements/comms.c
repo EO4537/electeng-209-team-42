@@ -2,7 +2,7 @@
  * comms.c
  *
  * Created: 15/10/2026 12:40:00 PM
- *  Author: ethan
+ *  Author: Ethan
  */
 
 #include "comms.h"
@@ -11,14 +11,14 @@
 
 uint8_t tempNum[4] = {3, 4, 5, 9};
 
-void comms_init(void) {
+void comms_init(void){
 	init_display();
 	init_uart();
 }
 
-void update_value(float num, uint8_t type) {
+void update_value(float num, uint8_t type){
 	// Check if number is out of bounds of what can be displayed
-	/*if (num >= 9999.5 || num < 0.001f) {
+	/*if (num >= 9999.5 || num < 0.001f){
 		set_error(type);
 		return;
 	}*/
@@ -28,12 +28,13 @@ void update_value(float num, uint8_t type) {
 	// place tracked separately)
 	uint8_t decimalPlace = 0;
 	
-	if (num >= 1) {
-		while (num < 999.95) {
+	if (num >= 1){
+		while (num < 999.95){
 			num = num * 10;
 			decimalPlace++;
 		}
-	} else {
+	} 
+	else{
 		num = num * 1000;
 		decimalPlace = 3;
 	}

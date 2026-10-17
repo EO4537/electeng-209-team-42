@@ -12,7 +12,7 @@
 
 
 
-void timer1_init() {
+void timer1_init(){
 	DDRB |= (1 << PB2); // Set PB2 as output to toggle at every sample start (Soc pin)
 	TCCR1A |= (1 << COM1B0);                // Toggle OC1B on compare match B
 	TCCR1B |= (1 << WGM12) | (1 << CS10);   // Timer 1 runs in CTC mode with prescaler of 1 

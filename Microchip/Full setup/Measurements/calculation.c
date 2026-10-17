@@ -2,20 +2,20 @@
  * calculation.c
  *
  * Created: 13/10/2026 7:57:53 am
- *  Author: adity
+ *  Author: Aditya
  */ 
 
 #include "calculation.h"
 #include <math.h>
 
-float calc_rms(volatile uint16_t *buffer, uint8_t n, float gain) {
+float calc_rms(volatile uint16_t *buffer, uint8_t n, float gain){
 	float sum=0;
 	for(uint8_t i =0 ; i < n ; i++){
 		float volts = (buffer[i] * VREF/ ADC_STEPS) - VOFF;  // Analogue Voltage at pin without offset
 		float value = volts/gain;  // Real source voltage
 		sum = sum + (value * value);  // Squaring voltage and adding them
 	}
-	return sqrt(sum/n);  // squareroot the whole expression
+	return sqrt(sum/n);  // Squareroot the whole expression
 }
 
 float calc_peak(volatile uint16_t *buffer, uint8_t n, float gain){
@@ -29,7 +29,7 @@ float calc_peak(volatile uint16_t *buffer, uint8_t n, float gain){
 	return volts / gain;
 }
 
-static float counts_to_value(uint16_t counts , float gain) {
+static float counts_to_value(uint16_t counts , float gain){
 	float volts = (counts * VREF / ADC_STEPS) - VOFF;
 	return volts/ gain;
 }

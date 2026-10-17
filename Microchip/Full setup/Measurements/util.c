@@ -2,7 +2,7 @@
  * util.c
  *
  * Created: 6/10/2026 5:02:30 pm
- *  Author: eome621
+ *  Author: Ethan
  */ 
 
 #include "util.h"

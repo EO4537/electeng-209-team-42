@@ -2,7 +2,7 @@
  * adc.h
  *
  * Created: 9/09/2026 7:43:40 pm
- *  Author: adity
+ *  Author: Aditya
  */ 
 
 
