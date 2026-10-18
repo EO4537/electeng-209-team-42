@@ -21,7 +21,16 @@ static volatile uint8_t displayCycles = 0;
 static bool active = true;
 
 ISR (TIMER0_COMPA_vect){
-	if (!active) {return;}
+	if (!active) {
+		if (TCNT0 < 90) {
+			comms_enable();
+		} else {
+			return;
+		}
+	}
+	if (TCNT0 > 90) {
+		comms_disable();
+	}
 	// Change the digit shown on the 7 segment display
 	// every 5ms to create the illusion of a whole number
 	display_cycle_digit();

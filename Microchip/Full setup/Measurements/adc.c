@@ -8,6 +8,7 @@
 #include "common.h"
 #include "adc.h"
 #include "zerocrossing.h"
+#include "comms.h"
 #include <avr/io.h>
 #include <avr/interrupt.h>
 
@@ -70,7 +71,7 @@ ISR(ADC_vect) {
 		else{
 			i_buffer[sample_number] = result;
 			sample_number++;
-			if(sample_number >= MAX_SAMPLES){       
+			if(sample_number >= MAX_SAMPLES){
 				adc_state = STATE_COMPLETED;
 			}
 		}
