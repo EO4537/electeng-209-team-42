@@ -21,7 +21,7 @@ static uint8_t uartData[4][5] = {
 };
 
 // Header to print above data
-static const char header[] = "Voltage - Current - Power   - Energy";
+static const char header[] = "Voltage (V)   - Current (mA) - Power (W)    - Energy";
 
 // Local functions
 static void uart_transmit_char(uint8_t character);
@@ -85,7 +85,7 @@ void uart_transmit(void){
 		}
 		
 		// Print spacing between numbers
-		for (int j = 0; j < 5; j++){
+		for (int j = 0; j < 10; j++){
 			uart_transmit_char(32);	
 		}
 	}
