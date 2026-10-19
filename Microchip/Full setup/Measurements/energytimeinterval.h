@@ -10,12 +10,9 @@
 #define ENERGYTIMEINTERVAL_H_
 
 
-#include <stdint.h>
-#include <math.h>
-#include <avr/interrupt.h>
 
-
-void energytimeinterval (void);
+volatile float energytimeinterval ();
+void timer2_init();
 
 
 
