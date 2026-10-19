@@ -41,15 +41,27 @@ static const uint8_t DIGITS[10] = {
 	0b01101111
 };
 
+static const uint8_t LABELS[4] = {
+	0b00111110,
+	0b01110111,
+	0b01110011,
+	0b01111001
+};
+
 // Variables to track what digit from
 // what data should be displayed
 static volatile uint8_t type = 0;
 static volatile uint8_t place = 0;
+static volatile bool displayLabel = true;
 
 void display_cycle_digit(void) {
 	
 	// Display the required digit
-	transmit_digit(data[type][place], place);
+	if (displayLabel) {
+		transmit_digit(LABELS[type], place);
+	} else {
+		transmit_digit(data[type][place], place);
+	}
 	
 	// Show the next digit along next
 	place++;
@@ -62,8 +74,13 @@ void display_cycle_value(void) {
 	PORTB &= 0b11110000;
 	PORTB |= (1 << type);
 	
-	type++;
-	if (type == 4) {type = 0;};
+	if (displayLabel) {
+		displayLabel = false;
+	} else {
+		type++;
+		if (type == 4) {type = 0;};
+		displayLabel = true;
+	}
 }
 
 void display_init(void) {
