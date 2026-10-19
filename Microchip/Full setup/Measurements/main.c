@@ -15,17 +15,19 @@
 // added Ethan's function files
 #include "comms.h"
 #include "parameters.h"
+#include "energytimeinterval.h"
 
 float vrms;
 float ipeak_ma;
 float power;
 float irms;
-
+float calculatedenergy; 
 
 int main(void){
 	adc_init();
 	zc_init();
 	timer1_init();
+	timer2_init();
 	comms_init();
 	sei();
 
@@ -36,10 +38,12 @@ int main(void){
 			 //irms = calc_rms(i_buffer, MAX_SAMPLES, I_GAIN);
 			 ipeak_ma = calc_peak(i_buffer, MAX_SAMPLES ,  I_GAIN) * 1000;   // Peak current in mA
 			 power = calc_power(v_buffer , i_buffer , MAX_SAMPLES) + (RS*calc_rms(i_buffer, MAX_SAMPLES, I_GAIN));
+			 calculatedenergy = calculatedenergy + (power * energytimeinterval());
 			 
 			 comms_update_value(vrms, VOLTAGE);
 			 comms_update_value(ipeak_ma, CURRENT);
 			 comms_update_value(power, POWER);
+			 comms_update_value(calculatedenergy, ENERGY);
 			 adc_reset();
 		}
 	}
