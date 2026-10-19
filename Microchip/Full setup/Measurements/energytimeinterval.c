@@ -26,11 +26,12 @@ TIMSK2 |= (1<<TOV2);
 
 
 volatile float energytimeinterval (){
-	uint8_t currenttimer2step = TCNT2;
+	uint8_t currentTimer2Step = TCNT2;
+	uint8_t currentCycleCount = timer2_cycle_count;
 	TCNT2 = 0;
 	timer2_cycle_count = 0;
 	
-	energy_time_interval_s = (timer2_cycle_count * timer2cycletime_s) + (currenttimer2step * timer2steptime);
+	energy_time_interval_s = (currentCycleCount * timer2cycletime_s) + (currentTimer2Step * timer2steptime);
 	
 	return energy_time_interval_s;
 }
