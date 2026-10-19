@@ -147,6 +147,12 @@
     <Compile Include="display.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="energytimeinterval.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="energytimeinterval.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="main.c">
       <SubType>compile</SubType>
     </Compile>
