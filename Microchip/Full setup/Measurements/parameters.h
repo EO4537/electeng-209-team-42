@@ -16,6 +16,6 @@
 #define ENERGY 3
 
 #define F_CPU 2000000UL // Rate of processor frequency
-#define SAMPLING_RATE 9876UL // Rate of ADC sampling
+#define SAMPLING_RATE 9875UL // Rate of ADC sampling
 
 #endif /* PARAMETERS_H_ */

@@ -22,14 +22,7 @@ static bool active = true;
 
 ISR (TIMER0_COMPA_vect){
 	if (!active) {
-		if (TCNT0 < 90) {
-			comms_enable();
-		} else {
-			return;
-		}
-	}
-	if (TCNT0 > 90) {
-		comms_disable();
+		return;	
 	}
 	// Change the digit shown on the 7 segment display
 	// every 5ms to create the illusion of a whole number

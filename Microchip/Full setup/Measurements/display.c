@@ -42,10 +42,10 @@ static const uint8_t DIGITS[10] = {
 };
 
 static const uint8_t LABELS[4] = {
-	0b00111110,
-	0b01110111,
-	0b01110011,
-	0b01111001
+	0b00111110, // U
+	0b00111001, // C (was A)
+	0b01110011, // P
+	0b01111001  // E
 };
 
 // Variables to track what digit from

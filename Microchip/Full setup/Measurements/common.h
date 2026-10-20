@@ -22,7 +22,7 @@
 #define VREF      5.0              
 #define ADC_STEPS 1024.0           
 #define VOFF      2.08
-#define SAMPLING_RATE 9876UL // ADC conversion rate
+#define SAMPLING_RATE 9875UL // ADC conversion rate
 
 
 

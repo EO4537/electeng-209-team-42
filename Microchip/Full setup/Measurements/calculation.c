@@ -26,7 +26,7 @@ float calc_peak(volatile uint16_t *buffer, uint8_t n, float gain){
 		}
 	}
 	float volts = (max * VREF / ADC_STEPS) - VOFF;
-	return volts / gain;
+	return (volts / gain);
 }
 
 static float counts_to_value(uint16_t counts , float gain){
